@@ -36,7 +36,7 @@ class RabbitRPCManager:
         self.pending: dict[str, Pending] = {}
         self.callback_queue: RabbitQueue | None = None
         self.subscriber: Any = None
-        self._setup_lock = asyncio.Lock()
+        self.setup_lock = asyncio.Lock()
 
     async def get_callback_queue(self) -> RabbitQueue:
         """Идемпотентно создаёт callback-очередь и подписчика"""
@@ -44,7 +44,7 @@ class RabbitRPCManager:
         if self.callback_queue is not None:
             return self.callback_queue
 
-        async with self._setup_lock:
+        async with self.setup_lock:
             if self.callback_queue is not None:
                 return self.callback_queue
 
@@ -70,15 +70,13 @@ class RabbitRPCManager:
         correlation_id = message.correlation_id
 
         if correlation_id is None:
-            logger.warning(
-                "[RabbitRPCManager] Response without correlation_id — dropped"
-            )
+            logger.warning("[RabbitRPCManager] Response without correlation_id dropped")
             return
 
         pending = self.pending.pop(correlation_id, None)
         if pending is None:
             logger.warning(
-                f"[RabbitRPCManager] Unknown correlation_id '{correlation_id}' — dropped"
+                f"[RabbitRPCManager] Unknown correlation_id '{correlation_id}' dropped"
             )
             return
 
