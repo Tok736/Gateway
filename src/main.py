@@ -2,9 +2,9 @@ from contextlib import asynccontextmanager
 
 from fastapi import FastAPI
 
+from src.auth.router import router as auth_router
 from src.logger import logger
 from src.rabbit import broker
-from src.routers.auth import router as auth_router
 
 
 @asynccontextmanager

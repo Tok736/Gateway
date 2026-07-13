@@ -2,7 +2,9 @@ from fastapi import APIRouter, HTTPException
 
 from src.base_schemas import RabbitRPCResponse
 from src.rabbit import rpc_call
-from src.schemas.auth import RegisterRequest, UserRead
+from src.logger import logger
+
+from .schemas import RegisterRequest, UserRead
 
 router = APIRouter(prefix="/auth", tags=["auth"])
 
@@ -18,7 +20,7 @@ async def register(request: RegisterRequest) -> UserRead:
         timeout=10,
     )
 
-    if response is None or response.data is None:
+    if response is None:
         raise HTTPException(status_code=500, detail="Auth service is unavailable")
 
     if response.status >= 300:

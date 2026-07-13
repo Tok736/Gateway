@@ -141,4 +141,9 @@ async def rpc_call(
 ) -> T_response | None:
     """Выполнить RPC-запрос по RabbitMQ"""
 
-    return await manager.call(request, queue, response_schema, timeout=timeout, ttl=ttl)
+    result = await manager.call(request, queue, response_schema, timeout=timeout, ttl=ttl)
+
+    if result is not None:
+        logger.debug(f"[rpc_call] Answer from rpc call to {queue}:\n{result.model_dump()}")
+
+    return result
