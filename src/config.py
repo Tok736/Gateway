@@ -4,19 +4,27 @@ from typing import Any
 from pydantic import BaseModel
 from pydantic_settings import BaseSettings
 
+from src.enums import Environment
 from src.logger import logger
 
 
 # fmt: off
 class ProjectSettings(BaseModel):
-    workers:                   int
+    workers:            int
+    environment:        Environment
+
+
+class AuthSettings(BaseModel):
+    cookie_domain:      str | None
+    access_token_ttl:   int
+    refresh_token_ttl:  int
 
 
 class RabbitSettings(BaseModel):
-    user:                      str | None
-    password:                  str | None
-    host:                      str
-    port:                      int
+    user:               str | None
+    password:           str | None
+    host:               str
+    port:               int
 
     @property
     def rabbit_url(self) -> str:
@@ -24,9 +32,9 @@ class RabbitSettings(BaseModel):
 
 
 class LogSettings(BaseModel):
-    level:                     str
-    console_output:            bool
-    exceptions:                bool
+    level:              str
+    console_output:     bool
+    exceptions:         bool
 
 # fmt: on
 
@@ -36,6 +44,7 @@ class Settings(BaseSettings):
 
     # fmt: off
     project:        ProjectSettings
+    auth:           AuthSettings
     rabbit:         RabbitSettings
     log:            LogSettings
     # fmt: on
@@ -148,6 +157,14 @@ class Settings(BaseSettings):
         config: dict[str, Any], web_config: dict[str, Any]
     ) -> None:
         """Заполняет данные из главного веб конфига"""
+
+        config["project"]["environment"] = web_config["project"]["environment"]
+
+        config["auth"] = {
+            "cookie_domain": web_config["auth"]["cookie_domain"],
+            "access_token_ttl": web_config["auth"]["access_token_ttl"],
+            "refresh_token_ttl": web_config["auth"]["refresh_token_ttl"],
+        }
 
         config["rabbit"] = {
             "user": web_config["rabbit_mq"]["login"],

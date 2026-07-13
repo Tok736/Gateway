@@ -1,7 +1,8 @@
 import asyncio
-from typing import Any, NamedTuple, TypeVar
+from typing import Any, Generic, Literal, NamedTuple, TypeVar, overload
 from uuid import uuid4
 
+from fastapi import HTTPException
 from faststream.rabbit import RabbitBroker, RabbitMessage, RabbitQueue
 from pydantic import BaseModel
 
@@ -141,9 +142,92 @@ async def rpc_call(
 ) -> T_response | None:
     """Выполнить RPC-запрос по RabbitMQ"""
 
-    result = await manager.call(request, queue, response_schema, timeout=timeout, ttl=ttl)
+    result = await manager.call(
+        request, queue, response_schema, timeout=timeout, ttl=ttl
+    )
 
     if result is not None:
-        logger.debug(f"[rpc_call] Answer from rpc call to {queue}:\n{result.model_dump()}")
+        logger.debug(
+            f"[rpc_call] Answer from rpc call to {queue}:\n{result.model_dump()}"
+        )
 
     return result
+
+
+T = TypeVar("T", bound=BaseModel)
+
+
+# fmt: off
+class RabbitRPCResponse(BaseModel, Generic[T]):
+    """Классический формат для ответов от rabbit RPC сервисов"""
+
+    status:   int      = 200
+    message:  str      = "Ok"
+    data:     T | None = None
+# fmt: on
+
+
+@overload
+async def rpc_handler(
+    request: BaseModel,
+    queue: str,
+    response_schema: type[RabbitRPCResponse[T]],
+    service_name: str,
+    *,
+    timeout: float = 60,
+    ttl: float = 3600,
+    data_expected: Literal[True] = True,
+    raise_http_error: bool = True,
+) -> T: ...
+
+
+@overload
+async def rpc_handler(
+    request: BaseModel,
+    queue: str,
+    response_schema: type[RabbitRPCResponse[T]],
+    service_name: str,
+    *,
+    timeout: float = 60,
+    ttl: float = 3600,
+    data_expected: Literal[False],
+    raise_http_error: bool = True,
+) -> None: ...
+
+
+async def rpc_handler(
+    request: BaseModel,
+    queue: str,
+    response_schema: type[RabbitRPCResponse[T]],
+    service_name: str,
+    *,
+    timeout: float = 60,
+    ttl: float = 3600,
+    data_expected: bool = True,
+    raise_http_error: bool = True,
+) -> T | None:
+    """RPC запрос по RabbitMQ с дополнительной обработкой исключений"""
+
+    response = await rpc_call(
+        request,
+        queue,
+        response_schema,
+        timeout=timeout,
+        ttl=ttl,
+    )
+
+    if raise_http_error:
+        if response is None:
+            raise HTTPException(
+                status_code=500, detail=f"{service_name} is unavailable"
+            )
+
+        if response.status >= 300:
+            raise HTTPException(status_code=response.status, detail=response.message)
+
+        if data_expected and response.data is None:
+            raise HTTPException(
+                status_code=500, detail=f"{service_name} unexpected behavior"
+            )
+
+    return response.data if response else None  # pyright: ignore[reportOptionalMemberAccess]

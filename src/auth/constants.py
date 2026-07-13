@@ -1,0 +1,4 @@
+ACCESS_COOKIE_NAME = "access_token"
+ACCESS_COOKIE_PATH = "/"
+REFRESH_COOKIE_NAME = "refresh_token"
+REFRESH_COOKIE_PATH = "/auth"
