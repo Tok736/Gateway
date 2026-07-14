@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Request, Response
+from fastapi import APIRouter, HTTPException, Request, Response, status
 
 from src.rabbit import RabbitRPCResponse, rpc_handler
 
@@ -7,6 +7,7 @@ from .schemas import (
     AuthResponse,
     LoginRequest,
     LogoutRequest,
+    RefreshRequest,
     RegisterRequest,
     RevokeRequest,
     TokenPair,
@@ -50,7 +51,7 @@ async def login(request: LoginRequest, response: Response) -> AuthResponse:
     return AuthResponse(token_type=tokens.token_type, expires_at=tokens.expires_at)
 
 
-@router.post("/logout")
+@router.post("/logout", status_code=status.HTTP_204_NO_CONTENT)
 async def logout(
     logout_request: LogoutRequest, request: Request, response: Response
 ) -> None:
@@ -75,3 +76,28 @@ async def logout(
             data_expected=False,
             raise_http_error=False,
         )
+
+
+@router.post("/refresh")
+async def refresh(request: Request, response: Response) -> AuthResponse:
+    """Выйти: отозвать refresh-токен и очистить куки."""
+
+    refresh_token = request.cookies.get(REFRESH_COOKIE_NAME)
+
+    if not refresh_token:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Refresh token was not provided",
+        )
+
+    tokens = await rpc_handler(
+        RefreshRequest(refresh_token=refresh_token),
+        "auth_consumer.POST.refresh",
+        RabbitRPCResponse[TokenPair],
+        "Auth service",
+        timeout=10,
+    )
+
+    set_auth_cookies(response, tokens)
+
+    return AuthResponse(token_type=tokens.token_type, expires_at=tokens.expires_at)

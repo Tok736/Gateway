@@ -16,7 +16,7 @@ class RegisterRequest(BaseModel):
     nickname:        str
     basic_role:      BasicRole
 
-    @field_serializer("password", when_used='always')
+    @field_serializer("password", when_used="always")
     def dump_password_plain(self, value: SecretStr) -> str:
         return value.get_secret_value()
 
@@ -25,7 +25,7 @@ class LoginRequest(BaseModel):
     email:           EmailStr
     password:        SecretStr = Field(min_length=1, max_length=128)
 
-    @field_serializer("password", when_used='always')
+    @field_serializer("password", when_used="always")
     def dump_password_plain(self, value: SecretStr) -> str:
         return value.get_secret_value()
 
@@ -35,6 +35,10 @@ class TokenPair(BaseModel):
     refresh_token:   str
     token_type:      str = "Bearer"
     expires_at:      int
+
+
+class RefreshRequest(BaseModel):
+    refresh_token:   str
 
 
 class RevokeRequest(BaseModel):
