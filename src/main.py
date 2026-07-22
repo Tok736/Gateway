@@ -5,7 +5,7 @@ from fastapi import FastAPI
 from src.auth.router import router as auth_router
 from src.logger import logger
 from src.rabbit import broker
-from src.user.router import router as user_router
+from src.user.router import student_router, user_router
 
 
 @asynccontextmanager
@@ -20,5 +20,9 @@ async def lifespan(app: FastAPI):
 
 app = FastAPI(lifespan=lifespan)
 
-app.include_router(auth_router)
-app.include_router(user_router)
+for router in (
+    auth_router,
+    user_router,
+    student_router,
+):
+    app.include_router(router)
