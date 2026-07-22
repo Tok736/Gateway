@@ -23,7 +23,7 @@ async def register(request: RegisterRequest, response: Response) -> AuthResponse
 
     tokens = await rpc_handler(
         request,
-        "auth_consumer.POST.register",
+        "POST-auth_consumer/register",
         RabbitRPCResponse[TokenPair],
         "Auth service",
         timeout=10,
@@ -40,7 +40,7 @@ async def login(request: LoginRequest, response: Response) -> AuthResponse:
 
     tokens = await rpc_handler(
         request,
-        "auth_consumer.POST.login",
+        "POST-auth_consumer/login",
         RabbitRPCResponse[TokenPair],
         "Auth service",
         timeout=5,
@@ -69,7 +69,7 @@ async def logout(
 
         await rpc_handler(
             revoke_request,
-            "auth_consumer.POST.revoke",
+            "POST-auth_consumer/revoke",
             RabbitRPCResponse,
             "Auth service",
             timeout=5,
@@ -92,7 +92,7 @@ async def refresh(request: Request, response: Response) -> AuthResponse:
 
     tokens = await rpc_handler(
         RefreshRequest(refresh_token=refresh_token),
-        "auth_consumer.POST.refresh",
+        "POST-auth_consumer/refresh",
         RabbitRPCResponse[TokenPair],
         "Auth service",
         timeout=10,

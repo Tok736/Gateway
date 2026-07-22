@@ -147,9 +147,12 @@ async def rpc_call(
     )
 
     if result is not None:
-        logger.debug(
-            f"[rpc_call] Answer from rpc call to {queue}:\n{result.model_dump()}"
-        )
+        try:
+            logger.debug(
+                f"[rpc_call] Answer from rpc call to {queue}:\n{result.model_dump()}"
+            )
+        except Exception:
+            logger.debug(f"[rpc_call] Got answer from rpc call to {queue}. No content")
 
     return result
 
@@ -164,6 +167,10 @@ class RabbitRPCResponse(BaseModel, Generic[T]):
     status:   int      = 200
     message:  str      = "Ok"
     data:     T | None = None
+
+    @property
+    def ok(self) -> bool:
+        return self.status < 300
 # fmt: on
 
 

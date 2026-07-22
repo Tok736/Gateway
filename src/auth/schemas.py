@@ -15,6 +15,8 @@ class RegisterRequest(BaseModel):
     password:        SecretStr = Field(min_length=8, max_length=128)
     nickname:        str
     basic_role:      BasicRole
+    timezone:        str
+    locale:          str
 
     @field_serializer("password", when_used="always")
     def dump_password_plain(self, value: SecretStr) -> str:
