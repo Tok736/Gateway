@@ -56,7 +56,6 @@ class UserUpdateRequest(UserUpdate):
 
 class StudentCreate(BaseModel):
     nickname:              str | None       = Field(default=None, max_length=200)
-    contacts:              dict | None      = None
     subjects:              list[str] | None = None
     level:                 str | None       = Field(default=None, max_length=100)
     notes:                 str | None       = None

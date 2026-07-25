@@ -49,9 +49,7 @@ class RabbitRPCManager:
             if self.callback_queue is not None:
                 return self.callback_queue
 
-            callback_queue = RabbitQueue(
-                f"Gateway_Callback_{uuid4().hex[:16]}", exclusive=True
-            )
+            callback_queue = RabbitQueue(f"Gateway_Callback_{uuid4().hex[:16]}", exclusive=True)
             subscriber = self.broker.subscriber(callback_queue)
 
             @subscriber
@@ -62,9 +60,7 @@ class RabbitRPCManager:
 
             self.subscriber = subscriber
             self.callback_queue = callback_queue
-            logger.debug(
-                f"[RabbitRPCManager] Callback queue '{callback_queue.name}' is ready"
-            )
+            logger.debug(f"[RabbitRPCManager] Callback queue '{callback_queue.name}' is ready")
             return callback_queue
 
     async def _on_response(self, body: dict[str, Any], message: RabbitMessage) -> None:
@@ -76,9 +72,7 @@ class RabbitRPCManager:
 
         pending = self.pending.pop(correlation_id, None)
         if pending is None:
-            logger.warning(
-                f"[RabbitRPCManager] Unknown correlation_id '{correlation_id}' dropped"
-            )
+            logger.warning(f"[RabbitRPCManager] Unknown correlation_id '{correlation_id}' dropped")
             return
 
         if pending.future.done():
@@ -116,13 +110,9 @@ class RabbitRPCManager:
             )
             return await asyncio.wait_for(future, timeout=timeout)
         except TimeoutError:
-            logger.warning(
-                f"[RabbitRPCManager] Timeout waiting for response (cid={correlation_id})"
-            )
+            logger.warning(f"[RabbitRPCManager] Timeout waiting for response (cid={correlation_id})")
         except Exception as e:
-            logger.warning(
-                f"[RabbitRPCManager] Error on request (cid={correlation_id}): {e}"
-            )
+            logger.warning(f"[RabbitRPCManager] Error on request (cid={correlation_id}): {e}")
         finally:
             self.pending.pop(correlation_id, None)
 
@@ -142,15 +132,11 @@ async def rpc_call(
 ) -> T_response | None:
     """Выполнить RPC-запрос по RabbitMQ"""
 
-    result = await manager.call(
-        request, queue, response_schema, timeout=timeout, ttl=ttl
-    )
+    result = await manager.call(request, queue, response_schema, timeout=timeout, ttl=ttl)
 
     if result is not None:
         try:
-            logger.debug(
-                f"[rpc_call] Answer from rpc call to {queue}:\n{result.model_dump()}"
-            )
+            logger.debug(f"[rpc_call] Answer from rpc call to {queue}:\n{result.model_dump()}")
         except Exception:
             logger.debug(f"[rpc_call] Got answer from rpc call to {queue}. No content")
 
@@ -225,16 +211,12 @@ async def rpc_handler(
 
     if raise_http_error:
         if response is None:
-            raise HTTPException(
-                status_code=500, detail=f"{service_name} is unavailable"
-            )
+            raise HTTPException(status_code=500, detail=f"{service_name} is unavailable")
 
         if response.status >= 300:
             raise HTTPException(status_code=response.status, detail=response.message)
 
         if data_expected and response.data is None:
-            raise HTTPException(
-                status_code=500, detail=f"{service_name} unexpected behavior"
-            )
+            raise HTTPException(status_code=500, detail=f"{service_name} unexpected behavior")
 
     return response.data if response else None  # pyright: ignore[reportOptionalMemberAccess]

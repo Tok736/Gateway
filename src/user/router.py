@@ -37,15 +37,11 @@ async def get_me(access_token: str = Depends(get_access_token)) -> UserRead:
 
 
 @user_router.put("/me")
-async def update_me(
-    user: UserUpdate, access_token: str = Depends(get_access_token)
-) -> UserRead:
+async def update_me(user: UserUpdate, access_token: str = Depends(get_access_token)) -> UserRead:
     """Получить пользователя на основе данных access_token"""
 
     return await rpc_handler(
-        UserUpdateRequest(
-            access_token=access_token, **user.model_dump(exclude_unset=True)
-        ),
+        UserUpdateRequest(access_token=access_token, **user.model_dump(exclude_unset=True)),
         "PUT-user_service/profile/me",
         RabbitRPCResponse[UserRead],
         "User service",
@@ -84,9 +80,7 @@ async def create_student(
     """Создать управляемую карточку ученика + связь tutor_of одной операцией"""
 
     return await rpc_handler(
-        StudentCreateRequest(
-            access_token=access_token, **student.model_dump(exclude_unset=True)
-        ),
+        StudentCreateRequest(access_token=access_token, **student.model_dump(exclude_unset=True)),
         "POST-user_service/student",
         RabbitRPCResponse[RelationRead],
         "User service",
@@ -103,9 +97,7 @@ async def get_students(
     """Список своих учеников с фильтрами/поиском/сортировкой"""
 
     return await rpc_handler(
-        ListStudentsRequest(
-            access_token=access_token, **params.model_dump(exclude_unset=True)
-        ),
+        ListStudentsRequest(access_token=access_token, **params.model_dump(exclude_unset=True)),
         "GET-user_service/student",
         RabbitRPCResponse[Page[StudentListItem]],
         "User service",

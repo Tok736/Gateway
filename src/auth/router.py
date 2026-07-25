@@ -52,9 +52,7 @@ async def login(request: LoginRequest, response: Response) -> AuthResponse:
 
 
 @router.post("/logout", status_code=status.HTTP_204_NO_CONTENT)
-async def logout(
-    logout_request: LogoutRequest, request: Request, response: Response
-) -> None:
+async def logout(logout_request: LogoutRequest, request: Request, response: Response) -> None:
     """Выйти: отозвать refresh-токен и очистить куки."""
 
     clear_auth_cookies(response)

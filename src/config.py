@@ -90,29 +90,21 @@ class Settings(BaseSettings):
         """
 
         if not isinstance(target_config, dict) or not isinstance(source_config, dict):
-            raise ValueError(
-                "First layer in structure of config.json and config-default.json must be dict like"
-            )
+            raise ValueError("First layer in structure of config.json and config-default.json must be dict like")
 
-        stack: list[tuple[dict[str, Any], dict[str, Any]]] = [
-            (target_config, source_config)
-        ]
+        stack: list[tuple[dict[str, Any], dict[str, Any]]] = [(target_config, source_config)]
 
         while len(stack) > 0:
             target, source = stack.pop()
 
             for key in list(target.keys()):
                 if key not in source:
-                    logger.warning(
-                        f"[Settings] Field '{key}' must not be in config.json"
-                    )
+                    logger.warning(f"[Settings] Field '{key}' must not be in config.json")
                     del target[key]
 
             for key in source:
                 if key not in target:
-                    logger.warning(
-                        f"[Settings] Field '{key}' is missing in config.json"
-                    )
+                    logger.warning(f"[Settings] Field '{key}' is missing in config.json")
                     target[key] = source[key]
 
             temp_dict = {key: target[key] for key in source}
@@ -136,9 +128,7 @@ class Settings(BaseSettings):
                 ):
                     try:
                         target[key] = type(source[key])(target[key])
-                        logger.warning(
-                            f"[Settings] Type of field '{key}' successfully converted"
-                        )
+                        logger.warning(f"[Settings] Type of field '{key}' successfully converted")
                     except ValueError:
                         target[key] = source[key]
                         logger.warning(f"[Settings] Type of field '{key}' is not right")
@@ -148,14 +138,10 @@ class Settings(BaseSettings):
 
                 else:
                     target[key] = source[key]
-                    logger.warning(
-                        f"[Settings] Value {source[key]} is set on field '{key}'"
-                    )
+                    logger.warning(f"[Settings] Value {source[key]} is set on field '{key}'")
 
     @staticmethod
-    def fill_from_web_config(
-        config: dict[str, Any], web_config: dict[str, Any]
-    ) -> None:
+    def fill_from_web_config(config: dict[str, Any], web_config: dict[str, Any]) -> None:
         """Заполняет данные из главного веб конфига"""
 
         config["project"]["environment"] = web_config["project"]["environment"]
@@ -174,7 +160,7 @@ class Settings(BaseSettings):
         }
 
     @staticmethod
-    def from_files(config_path: str, web_config_path: str) -> "Settings":
+    def from_files(config_path: str, web_config_path: str) -> Settings:
         """Загружает конфиг из конфиг файла"""
 
         with open("config.json", encoding="utf-8") as f:
@@ -186,14 +172,10 @@ class Settings(BaseSettings):
             Settings.fill_from(config, default_config)
         except FileNotFoundError:
             logger.warning(f"[Settings] There is no config file on {config_path}")
-            logger.info(
-                f"[Settings] Create a config file with such structure:\n{json.dumps(default_config, indent=4)}"
-            )
+            logger.info(f"[Settings] Create a config file with such structure:\n{json.dumps(default_config, indent=4)}")
             config = default_config
         except Exception as e:
-            logger.warning(
-                f"[Settings] Error opening {config_path}. {e}. Will use data from default config"
-            )
+            logger.warning(f"[Settings] Error opening {config_path}. {e}. Will use data from default config")
             config = default_config
 
         with open(web_config_path, encoding="utf-8") as f:

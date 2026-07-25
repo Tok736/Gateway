@@ -16,9 +16,7 @@ def get_worker_amount() -> None:
             json_dict = json.load(f)
             workers = json_dict["project"]["workers"]
     except Exception as e:
-        logger.warning(
-            f"[get_worker_amount] Error getting workers amount. {e}. Set as default (4 workers)"
-        )
+        logger.warning(f"[get_worker_amount] Error getting workers amount. {e}. Set as default (4 workers)")
         workers = 4
 
     print(workers)
