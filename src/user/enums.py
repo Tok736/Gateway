@@ -7,6 +7,7 @@ class BasicRole(StrEnum):
 
     tutor     = auto()
     student   = auto()
+    parent    = auto()
 
 
 class AccountStatus(StrEnum):
